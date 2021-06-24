@@ -6,5 +6,5 @@ use Illuminate\Http\Request;
 
 interface ICheckout
 {
-    function addToCart(Request $request):object;
+    function addToCart(Request $request);
 }

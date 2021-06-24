@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CheckoutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,4 +19,6 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('/', function(){
         return  ["message" => "ok"];;
     });
+
+    Route::post('checkout', [CheckoutController::class, 'addToCart']);
 });

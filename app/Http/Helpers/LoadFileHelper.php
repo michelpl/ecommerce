@@ -4,37 +4,36 @@ namespace App\Http\Helpers;
 
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use PhpParser\Node\Expr\Throw_;
 
 class LoadFileHelper
 {
-    private static string $filename = "PRODUCT_LIST_JSON";
+    public static array $file;
 
-    public static $instance;
-
-
-    private function __construct() {
-        //
+    public function __construct()
+    {
     }
 
-    public static function getInstance() {
-        if (!isset(self::$instance)) {
-            self::$instance = self::loadFile();
+    public static function getJsonFile(string $fileName) : array
+    {
+        if (!isset(self::$file)) {
+            self::$file = self::loadFile($fileName);
         }
 
-        return self::$instance;
+        return self::$file;
     }
 
-    private static function loadFile() {
+    private static function loadFile(string $fileName)
+    {
         try {
-            $fileName = Env::get(self::$filename);
             $fileContent = Storage::disk('local')->get($fileName);
 
             return json_decode($fileContent);
 
         } catch (FileNotFoundException $e) {
-            return $e->getMessage();
+            Log::critical($e->getMessage());
         }
     }
 }

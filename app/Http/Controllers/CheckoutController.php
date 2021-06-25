@@ -6,6 +6,7 @@ use App\Http\Helpers\LoadFileHelper;
 use App\Http\Interfaces\ICheckout;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Env;
 
 class CheckoutController extends Controller implements ICheckout
 {
@@ -21,7 +22,7 @@ class CheckoutController extends Controller implements ICheckout
      */
     public function addProductsToCart(Request $request)
     {
-        LoadFileHelper::getInstance();
+        LoadFileHelper::getJsonFile(Env::get("PRODUCT_LIST_JSON"));
 
         return response()->json($request, Response::HTTP_OK);
     }

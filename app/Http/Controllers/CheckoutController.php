@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Helpers\LoadFileHelper;
-use App\Http\Interfaces\ICheckout;
+use App\Http\Controllers\Interfaces\ICheckout;
+use App\Http\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Env;
 
 class CheckoutController extends Controller implements ICheckout
 {
-    protected array $validationRules = [
+    private array $validationRules = [
         'id' => 'required|integer',
         'quantity' => 'required|integer'
     ];
+
+    private CartService $cartService;
+
+    public function __construct(CartService $cartService)
+    {
+        $this->cartService = $cartService;
+    }
 
     /**
      * Add products to cart
@@ -22,8 +28,14 @@ class CheckoutController extends Controller implements ICheckout
      */
     public function addProductsToCart(Request $request)
     {
-        LoadFileHelper::getJsonFile(Env::get("PRODUCT_LIST_JSON"));
+        try {
+            return $this->cartService->addProducts($request);
 
-        return response()->json($request, Response::HTTP_OK);
+
+            return response()->json($this->cartService->getCart());
+
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage(), $e->getCode());
+        }
     }
 }

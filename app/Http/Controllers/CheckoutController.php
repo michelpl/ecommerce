@@ -6,14 +6,12 @@ use App\Http\Helpers\LoadFileHelper;
 use App\Http\Interfaces\ICheckout;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Env;
 
 class CheckoutController extends Controller implements ICheckout
 {
     protected array $validationRules = [
         'id' => 'required|integer',
-        'quantity' => 'required|integer',
-
+        'quantity' => 'required|integer'
     ];
 
     /**
@@ -21,11 +19,9 @@ class CheckoutController extends Controller implements ICheckout
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
-    public function addToCart(Request $request)
+    public function addProductsToCart(Request $request)
     {
-        $helper = new LoadFileHelper();
-
-        $helper->loadJsonFile(Env::get("PRODUCT_LIST_JSON"));
+        LoadFileHelper::getInstance();
 
         return response()->json($request, Response::HTTP_OK);
     }

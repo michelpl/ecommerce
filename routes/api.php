@@ -17,8 +17,8 @@ use App\Http\Controllers\CheckoutController;
 
 Route::group(['prefix' => 'v1'], function () {
     Route::get('/', function(){
-        return  ["message" => "ok"];;
+        return  ["message" => "ok"];
     });
 
-    Route::post('checkout', [CheckoutController::class, 'addToCart']);
+    Route::post('checkout', [CheckoutController::class, 'addProductsToCart']);
 });

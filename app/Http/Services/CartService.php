@@ -12,48 +12,39 @@ class CartService
 {
     private Cart $cart;
     private array $productListFromStorage;
+    private array $cartProductList;
 
     public function __construct(Cart $cart)
     {
         $this->cart = $cart;
-
-        $fileName = Env::get("PRODUCT_LIST_JSON");
-        $productList = LoadFileHelper::getJsonFile($fileName);
-        $this->productListFromStorage = $productList;
+        $this->productListFromStorage = $this->loadProductListFromFile();
     }
 
-    public function addProducts(Request $request)
+    private function loadProductListFromFile() : array
+    {
+        $fileName = Env::get("PRODUCT_LIST_JSON");
+        $fileContent = LoadFileHelper::getJsonFile($fileName);
+        return $this->productListFactory($fileContent);
+    }
+
+    private function productListFactory($fileContent): array
+    {
+        $productList = [];
+
+        foreach ($fileContent as $product) {
+            $productList[$product->id] = $product;
+        }
+
+        return $productList;
+    }
+
+    public function cartUpdate(Request $request)
     {
         try {
-            $currentProducts = $this->cart->getProducts();
+            $newProducts = $this->findProducts($request->products);
 
-            $foundOnStorage = [];
-            foreach ($request->products as $productToAdd)
-            {
 
-                $index = array_keys(
-                    array_column(
-                        $this->productListFromStorage,
-                        'id'
-                    ),
-                    $productToAdd['id']
-                );
 
-                if (empty($index)) {
-                    throw new \Exception(
-                        "Product {$productToAdd['id']} not found",
-                        404
-                    );
-                }
-
-                $index = intval(current($index));
-
-                if (isset($this->productListFromStorage[$index])) {
-                    $foundOnStorage[] = $this->productListFromStorage[$index];
-                }
-            }
-
-            $this->cart->setProducts($foundOnStorage);
 
             return $this->getCart();
 
@@ -66,4 +57,43 @@ class CartService
     {
         return $this->cart->getInstance();
     }
+
+    private function findProducts(array $requestProducts)
+    {
+        $fromStorageIndexes = array_column(
+            $this->productListFromStorage,
+            'id'
+        );
+
+        $fromRequestIndexes = array_column(
+            $requestProducts,
+            'id'
+        );
+
+        $indexesNotFound = array_diff($fromRequestIndexes, $fromStorageIndexes);
+
+        if (!empty($indexesNotFound)) {
+            throw new \Exception(
+                "Product(s) not found id(s): " .
+                implode(" , ", array_values($indexesNotFound)),
+                404
+            );
+        }
+
+        return $fromRequestIndexes;
+    }
+
+    /**
+     * @param array $fromRequestIndexes
+     * @param array $foundOnStorage
+     * @return array
+     */
+    private function fillProductList(array $fromRequestIndexes, array $foundOnStorage): array
+    {
+        foreach ($fromRequestIndexes as $index) {
+            $foundOnStorage[] = $this->productListFromStorage[$index];
+        }
+        return $foundOnStorage;
+    }
+
 }

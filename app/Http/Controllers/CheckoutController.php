@@ -29,8 +29,18 @@ class CheckoutController extends Controller implements ICheckout
     public function addProductsToCart(Request $request)
     {
         try {
-            return $this->cartService->addProducts($request);
+            $products = $this->cartService->cartUpdate($request);
 
+            /*$obj = new \stdClass();
+
+            $obj->a = 1;
+
+            $obj->b = "abc";
+            $obj->c = ["aaaaa", "bbbbb"];
+            $obj->d = $products;*/
+
+
+            return response()->json($products);
 
             return response()->json($this->cartService->getCart());
 

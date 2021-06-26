@@ -9,6 +9,56 @@ class Cart
     private int $totalDiscountInCents = 0;
     private array $products = [];
 
+    public function mock()
+    {
+        $item1 = new CartItem();
+        $item2 = new CartItem();
+        $item3 = new CartItem();
+        $item4 = new CartItem();
+
+        $item1
+            ->setId(5)
+            ->setQuantity(3)
+            ->setUnitAmountInCents(100)
+            ->setTotalAmountInCents(100)
+            ->setIsGift(false)
+            ->setDiscountInCents(0);
+        $item2
+            ->setId(871)
+            ->setQuantity(11)
+            ->setUnitAmountInCents(100)
+            ->setTotalAmountInCents(100)
+            ->setIsGift(false)
+            ->setDiscountInCents(0);
+
+
+        $item3
+            ->setId(196)
+            ->setQuantity(200)
+            ->setUnitAmountInCents(100)
+            ->setTotalAmountInCents(100)
+            ->setIsGift(false)
+            ->setDiscountInCents(0);
+
+        $item4
+            ->setId(555)
+            ->setQuantity(19)
+            ->setUnitAmountInCents(100)
+            ->setTotalAmountInCents(100)
+            ->setIsGift(false)
+            ->setDiscountInCents(0);
+
+        $array = [
+            $item1->getInstance(),
+            $item2->getInstance(),
+            $item3->getInstance(),
+            $item4->getInstance()
+        ];
+
+
+        $this->setProducts($array);
+    }
+
     /**
      * @return array
      */

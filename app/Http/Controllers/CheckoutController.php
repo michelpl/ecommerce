@@ -31,18 +31,9 @@ class CheckoutController extends Controller implements ICheckout
         try {
             $products = $this->cartService->cartUpdate($request);
 
-            /*$obj = new \stdClass();
+            return response()->json($products, 201);
 
-            $obj->a = 1;
-
-            $obj->b = "abc";
-            $obj->c = ["aaaaa", "bbbbb"];
-            $obj->d = $products;*/
-
-
-            return response()->json($products);
-
-            return response()->json($this->cartService->getCart());
+            return response()->json($this->cartService->getCart(), 201);
 
         } catch (\Exception $e) {
             return response()->json($e->getMessage(), $e->getCode());

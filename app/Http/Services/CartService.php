@@ -3,7 +3,8 @@
 namespace App\Http\Services;
 
 use App\Http\Entities\Cart;
-use App\Http\Entities\Product;
+use App\Http\Entities\CartItem;
+use App\Http\Factories\CartItemFactory;
 use App\Http\Helpers\LoadFileHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
@@ -11,12 +12,13 @@ use Illuminate\Support\Env;
 class CartService
 {
     private Cart $cart;
+    private CartItemFactory $cartItemFactory;
     private array $productListFromStorage;
-    private array $cartProductList;
 
-    public function __construct(Cart $cart)
+    public function __construct(Cart $cart, CartItemFactory $cartItemFactory)
     {
         $this->cart = $cart;
+        $this->cartItemFactory = $cartItemFactory;
         $this->productListFromStorage = $this->loadProductListFromFile();
     }
 
@@ -24,26 +26,20 @@ class CartService
     {
         $fileName = Env::get("PRODUCT_LIST_JSON");
         $fileContent = LoadFileHelper::getJsonFile($fileName);
-        return $this->productListFactory($fileContent);
+
+        return $fileContent;
     }
 
-    private function productListFactory($fileContent): array
-    {
-        $productList = [];
-
-        foreach ($fileContent as $product) {
-            $productList[$product->id] = $product;
-        }
-
-        return $productList;
-    }
 
     public function cartUpdate(Request $request)
     {
         try {
-            $newProducts = $this->findProducts($request->products);
+            $newProducts = $this->findProducts(
+                $request->products,
+                $this->productListFromStorage
+            );
 
-
+            $this->cart->setProducts($newProducts);
 
 
             return $this->getCart();
@@ -58,42 +54,42 @@ class CartService
         return $this->cart->getInstance();
     }
 
-    private function findProducts(array $requestProducts)
+    /**
+     * @param array $requestProducts
+     * @return array An array of product ids
+     * @throws \Exception
+     */
+    private function findProducts(array $requestedProducts, array $list): array
     {
-        $fromStorageIndexes = array_column(
-            $this->productListFromStorage,
-            'id'
-        );
-
-        $fromRequestIndexes = array_column(
-            $requestProducts,
-            'id'
-        );
-
-        $indexesNotFound = array_diff($fromRequestIndexes, $fromStorageIndexes);
+        $listIds = array_column($list,'id');
+        $requestedIds = array_column($requestedProducts,'id');
+        $indexesNotFound = array_diff($requestedIds, $listIds);
 
         if (!empty($indexesNotFound)) {
             throw new \Exception(
-                "Product(s) not found id(s): " .
+                "Cart item(s) not found. id(s): " .
                 implode(" , ", array_values($indexesNotFound)),
                 404
             );
         }
-
-        return $fromRequestIndexes;
+        return array_keys(array_intersect($listIds, $requestedIds));
     }
 
     /**
-     * @param array $fromRequestIndexes
-     * @param array $foundOnStorage
-     * @return array
+     * @param array $productIds
+     * @return array An array of CartItem
+     * @throws \Exception
      */
-    private function fillProductList(array $fromRequestIndexes, array $foundOnStorage): array
+    private function extractCartItemsFromProductList(array $productIds): array
     {
-        foreach ($fromRequestIndexes as $index) {
-            $foundOnStorage[] = $this->productListFromStorage[$index];
-        }
-        return $foundOnStorage;
-    }
+            $cartItems = [];
+            foreach ($productIds as $index) {
+                $cartItems[] =
+                    $this->cartItemFactory->createFromJson(
+                        $this->productListFromStorage[$index]
+                    );
+            }
 
+            return $cartItems;
+    }
 }

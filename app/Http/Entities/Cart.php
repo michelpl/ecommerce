@@ -17,7 +17,7 @@ class Cart
         $cart['total_amount'] = $this->getTotalAmountInCents();
         $cart['total_amount_with_discount'] = $this->getTotalAmountWithDiscountInCents();
         $cart['total_discount'] = $this->getTotalDiscountInCents();
-        $cart['product'] = $this->getProducts();
+        $cart['products'] = $this->getProducts();
 
         return $cart;
     }

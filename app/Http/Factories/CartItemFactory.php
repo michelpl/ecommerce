@@ -19,7 +19,6 @@ class CartItemFactory implements IFactory
         try {
             $this->cartItem
                 ->setId($item['id'] ?? null)
-                ->setTotalAmountInCents($item['totalAmount'] ?? 0)
                 ->setIsGift($item['isGift'] ?? false)
                 ->setDiscountInCents($item['discountInCents'] ?? 0)
                 ->setQuantity($item['quantity'] ?? 0)

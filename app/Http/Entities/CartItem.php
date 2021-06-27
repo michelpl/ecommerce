@@ -20,8 +20,7 @@ class CartItem
         $cart->id = $this->getId();
         $cart->quantity = $this->getQuantity();
         $cart->unit_amount = $this->getUnitAmountInCents();
-        $cart->total_amount = $this->getUnitAmountInCents();
-        $cart->discount = $this->getTotalAmountInCents();
+        $cart->total_amount = $this->getTotalAmountInCents();
         $cart->discount = $this->getDiscountInCents();
         $cart->is_gift = $this->getIsGift();
 
@@ -67,6 +66,8 @@ class CartItem
         }
 
         $this->quantity = $quantity;
+        $this->setTotalAmountInCents();
+
         return $this;
     }
 
@@ -91,6 +92,8 @@ class CartItem
             );
         }
         $this->unitAmountInCents = $unitAmountInCents;
+        $this->setTotalAmountInCents();
+
         return $this;
     }
 
@@ -106,16 +109,11 @@ class CartItem
      * @param int $totalAmountInCents
      * @return CartItem
      */
-    public function setTotalAmountInCents(int $totalAmountInCents): CartItem
+    private function setTotalAmountInCents(): void
     {
-        if ($totalAmountInCents < 0) {
-            throw new \Exception(
-                "Total amount must be greater than 0",
-                400
-            );
-        }
-        $this->totalAmountInCents = $totalAmountInCents;
-        return $this;
+        $this->totalAmountInCents =
+            $this->getUnitAmountInCents() *
+            $this->getQuantity();
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Http\Helpers\LoadFileHelper;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Log;
 
 class CartService
 {
@@ -26,14 +27,27 @@ class CartService
     private function loadProductListFromFile() : array
     {
         $fileName = Env::get("PRODUCT_LIST_JSON");
-        return LoadFileHelper::getJsonFile($fileName);
+        $products = $this->productFactory(LoadFileHelper::getJsonFile($fileName));
+
+        return $products;
+    }
+
+    private function productFactory($productList): array
+    {
+        $newProductList = [];
+        foreach ($productList as $product)
+        {
+            $newProductList[$product->id] = $product;
+        }
+
+        return $newProductList;
     }
 
 
     public function cartUpdate(Request $request)
     {
         try {
-            return $this->buildProductListFromRequest($request);
+            $this->buildProductListFromRequest($request);
 
             return $this->getCart();
 
@@ -62,8 +76,15 @@ class CartService
         /*
          * @todo Verificar se a pessoa está tentando adicionar um produto que é gift
          * */
+        return $this->formatProductList($request);
+    }
 
-        $notFoundProducts = $this->notFoundProducts($request->products);
+    private function checkIfAllRequestedProductsExists(array $requestedProducts)
+    {
+        $requestedIds = array_column($this->productListFromStorage,'id');
+        $productIds = array_column($requestedProducts,'id');
+
+        $notFoundProducts = array_diff($productIds, $requestedIds);
 
         if ($notFoundProducts) {
             throw new Exception(
@@ -72,16 +93,6 @@ class CartService
                 404
             );
         }
-
-        return $this->formatProductList($request);
-    }
-
-    private function notFoundProducts(array $requestedProducts): array
-    {
-        $requestedIds = array_column($this->productListFromStorage,'id');
-        $productIds = array_column($requestedProducts,'id');
-
-        return array_diff($productIds, $requestedIds);
     }
 
     /**
@@ -89,9 +100,12 @@ class CartService
      * @return array
      * @throws Exception
      */
-    private function formatProductList(Request $request): array
+    private function formatProductList(Request $request)
     {
         $products = [];
+
+        $this->checkIfAllRequestedProductsExists($request->products);
+
         foreach ($request->products as $requestedProduct) {
 
             if (!isset($requestedProduct['id'])) {
@@ -100,28 +114,64 @@ class CartService
                     400
                 );
             }
-
             $cartItem = $this->cartItemFactory->create($requestedProduct);
+
+            $product = $this->productListFromStorage[$cartItem->getId()];
             $cartItem->setQuantity($requestedProduct['quantity']);
-            //$cartItem->setIsGift();
+            $cartItem->setIsGift($product->is_gift);
+            $cartItem->setUnitAmountInCents($product->amount);
 
             $cartItem->setDiscountInCents(
                 $this->getDiscountFromService(
-                    $cartItem->getId()
+                    $cartItem->getId(),
+                    $cartItem->getTotalAmountInCents()
                 )
             );
-            //update total amouint
-            //update total discount
+            $this->updateCartTotals(
+                $cartItem->getTotalAmountInCents(),
+                $cartItem->getDiscountInCents()
+            );
 
+            //Verificar se é black friday
 
             $products[] = $cartItem->getInstance();
         }
 
-        return $products;
+        $this->cart->setCartItems($products);
     }
 
-    private function getDiscountFromService()
+    private function updateCartTotals(int $unitAmount, int $unitDiscount): void
     {
-        return 0;
+        $this->cart->setTotalAmountInCents(
+            $this->cart->getTotalAmountInCents() +
+            $unitAmount
+        );
+
+        $this->cart->setTotalDiscountInCents(
+            $this->cart->getTotalDiscountInCents() +
+            $unitDiscount
+        );
+
+        $this->cart->setTotalAmountWithDiscountInCents(
+            $this->cart->getTotalAmountInCents() -
+            $this->cart->getTotalDiscountInCents()
+        );
+    }
+
+    private function getDiscountFromService($id, $totalAmount): int
+    {
+        try {
+            /**
+             * @implements DISCOUNT SERVICE
+             */
+            $discountPercentage = rand(0, 10);
+
+            return ($totalAmount * $discountPercentage) / 100;
+
+
+        } catch (Exception $e) {
+            Log::critical("Discount service not available | " . $e->getMessage());
+            return 0;
+        }
     }
 }

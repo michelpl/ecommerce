@@ -9,6 +9,7 @@ use App\Http\Helpers\LoadFileHelper;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 
 class CartService
@@ -49,6 +50,10 @@ class CartService
         try {
             $this->buildProductListFromRequest($request);
 
+            if ($this->shouldApplyGift()) {
+                $this->addGift();
+            }
+
             return $this->getCart();
 
         } catch (Exception $e) {
@@ -72,10 +77,6 @@ class CartService
                 400
             );
         }
-
-        /*
-         * @todo Verificar se a pessoa está tentando adicionar um produto que é gift
-         * */
         return $this->formatProductList($request);
     }
 
@@ -93,6 +94,13 @@ class CartService
                 404
             );
         }
+    }
+
+    private function findGiftProductId()
+    {
+        $isGiftFields = array_column($this->productListFromStorage,'is_gift');
+        $index = array_search(true, $isGiftFields);
+        return array_keys($this->productListFromStorage)[$index];
     }
 
     /**
@@ -114,9 +122,17 @@ class CartService
                     400
                 );
             }
-            $cartItem = $this->cartItemFactory->create($requestedProduct);
 
+            $cartItem = $this->cartItemFactory->create($requestedProduct);
             $product = $this->productListFromStorage[$cartItem->getId()];
+
+            if ($product->is_gift) {
+                throw new Exception(
+                    "You can't add a gift product",
+                    400
+                );
+            }
+
             $cartItem->setQuantity($requestedProduct['quantity']);
             $cartItem->setIsGift($product->is_gift);
             $cartItem->setUnitAmountInCents($product->amount);
@@ -132,11 +148,8 @@ class CartService
                 $cartItem->getDiscountInCents()
             );
 
-            //Verificar se é black friday
-
             $products[] = $cartItem->getInstance();
         }
-
         $this->cart->setCartItems($products);
     }
 
@@ -156,6 +169,33 @@ class CartService
             $this->cart->getTotalAmountInCents() -
             $this->cart->getTotalDiscountInCents()
         );
+    }
+
+    private function addGift()
+    {
+        $id = $this->findGiftProductId();
+        $gift = (array) ($this->productListFromStorage[$id]);
+
+        $item = $this->cartItemFactory->create($gift);
+        $item->setQuantity(1);
+        $item->setUnitAmountInCents($gift['amount']);
+        $item->setDiscountInCents($gift['amount']);
+        $item->setIsGift(true);
+
+        $newList = $this->cart->getCartItems() ;
+        $newList[] = $item->getInstance();
+        $this->cart->setCartItems($newList);
+
+        $this->updateCartTotals(
+            $item->getUnitAmountInCents(),
+            $item->getDiscountInCents()
+        );
+    }
+
+    private function shouldApplyGift():bool
+    {
+        $promotionDate = Env::get("BLACK_FRIDAY_DATE");
+        return $promotionDate == date("Y-m-d");
     }
 
     private function getDiscountFromService($id, $totalAmount): int

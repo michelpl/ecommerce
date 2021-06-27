@@ -14,7 +14,7 @@ class CartItemFactory implements IFactory
         $this->cartItem = $cartItem;
     }
 
-    public function create(array $item): CartItem
+    public function create(array $item)
     {
         try {
             $this->cartItem

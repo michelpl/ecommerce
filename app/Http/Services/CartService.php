@@ -21,82 +21,19 @@ class CartService
         $this->cart = $cart;
         $this->cartItemFactory = $cartItemFactory;
         $this->productListFromStorage = $this->loadProductListFromFile();
-
-        /**
-         * REMOVER
-         */
-        $this->cart->mock();
     }
 
     private function loadProductListFromFile() : array
     {
         $fileName = Env::get("PRODUCT_LIST_JSON");
-        $fileContent = LoadFileHelper::getJsonFile($fileName);
-
-        return $fileContent;
+        return LoadFileHelper::getJsonFile($fileName);
     }
 
 
     public function cartUpdate(Request $request)
     {
         try {
-            //REFACT
-            $requestedProducts = [];
-            foreach ($request->products as $requestedProduct) {
-                $requestedProducts[$requestedProduct['id']] = $requestedProduct;
-            }
-
-            $currentCartItens = $this->cart->getProducts();
-
-            return $this->updateCartProducts($currentCartItens, $requestedProducts);
-
-            //Busca produtos passados no request no products json
-            $newProductindexesOnProductList = $this->findProducts(
-                $request->products,
-                $this->productListFromStorage,
-                true
-            );
-
-            //Transforma o que foi passado no request em um cart item
-            /*$newCartItens = $this->extractCartItemsFromProductList(
-                array_keys($newProductindexesOnProductList),
-                $this->productListFromStorage
-            );*/
-
-
-
-            //Interceção entre os produtos novos e o que já estão no carrinho
-            $found = $this->findProducts($request->products, $currentCartItens);
-
-            //Pega o que eu achei de repetido e mostra o cart item dele
-            $incrementList = [];
-
-            foreach ($found as $index => $value)
-            {
-                $incrementList[] = $currentCartItens[$index];
-
-            }
-
-            $incrementList = $this->updateQuantity(
-                $incrementList,
-                $request->products
-            );
-
-
-
-            return [
-                "current" => $currentCartItens,
-                "new" => [],
-                "found" => $found,
-                "nicrementlist" => $incrementList
-            ];
-
-            /*$this->extractCartItemsFromProductList(array_values(
-                array_intersect($newProductindexesOnProductList, $currentProductIndexesOnProductList)
-            ));*/
-
-
-
+            return $this->buildProductListFromRequest($request);
 
             return $this->getCart();
 
@@ -111,84 +48,80 @@ class CartService
     }
 
     /**
-     * @param array $requestedProducts
-     * @param array $list
-     * @param bool $validate Thrwo Exception if a product was not found
-     * @return array An array of product ids
-     * @throws Exception
+     * @param Request $request
      */
-    private function findProducts(
-        array $requestedProducts,
-        array $list,
-        bool $validate = false
-    ): array
+    private function buildProductListFromRequest(Request $request)
     {
-        $listIds = array_column($list,'id');
-        $requestedIds = array_column($requestedProducts,'id');
-
-        $indexesNotFound = array_diff($requestedIds, $listIds);
-
-        if ($validate && !empty($indexesNotFound)) {
+        if (!isset($request->products)) {
             throw new Exception(
-                "Cart item(s) not found. id(s): " .
-                implode(" , ", array_values($indexesNotFound)),
+                "The products field is missing",
+                400
+            );
+        }
+
+        /*
+         * @todo Verificar se a pessoa está tentando adicionar um produto que é gift
+         * */
+
+        $notFoundProducts = $this->notFoundProducts($request->products);
+
+        if ($notFoundProducts) {
+            throw new Exception(
+                "Product(s) not found. id(s): " .
+                implode(" , ", array_values($notFoundProducts)),
                 404
             );
         }
 
-        return array_keys(array_intersect($listIds, $requestedIds));
+        return $this->formatProductList($request);
     }
 
-    private function updateCartProducts($currentCartItems, $requestProducts)
+    private function notFoundProducts(array $requestedProducts): array
     {
-        $found = [];
-        foreach ($currentCartItems as $currentCartItem) {
-            if (isset($requestProducts[$currentCartItem['id']])) {
+        $requestedIds = array_column($this->productListFromStorage,'id');
+        $productIds = array_column($requestedProducts,'id');
 
-                $currentCartItem['quantity'] +=
-                    $requestProducts[$currentCartItem['id']]['quantity'];
-
-                $found[] = $currentCartItem;
-            }
-        }
-
-        return ["current" => $currentCartItems, "requested" => $requestProducts, "found" => $found];
+        return array_diff($productIds, $requestedIds);
     }
 
-    private function updateQuantity(array $list, $request)
-    {
-        /*foreach ($list as $product) {
-
-            $ids = array_column($request, 'id');
-
-
-            $newQuantity = $requestId[$index];
-            $newQuantities[] = $newQuantity;
-
-        }
-
-
-        return $newQuantities;*/
-    }
     /**
-     * @param array $productIds
-     * @return array An array of CartItem
+     * @param Request $request
+     * @return array
      * @throws Exception
      */
-    private function extractCartItemsFromProductList(
-        array $productIds,
-        array $list
-    ): array
+    private function formatProductList(Request $request): array
     {
-            $cartItems = [];
-            foreach ($productIds as $index) {
+        $products = [];
+        foreach ($request->products as $requestedProduct) {
 
-                $cartItems[] =
-                    $this->cartItemFactory->createFromObject(
-                        $list[$index]
-                    );
+            if (!isset($requestedProduct['id'])) {
+                throw new Exception(
+                    "The products:id field is missing",
+                    400
+                );
             }
 
-            return $cartItems;
+            $cartItem = $this->cartItemFactory->create($requestedProduct);
+            $cartItem->setQuantity($requestedProduct['quantity']);
+            //$cartItem->setIsGift();
+
+            $cartItem->setDiscountInCents(
+                $this->getDiscountFromService(
+                    $cartItem->getId()
+                )
+            );
+            //update total amouint
+            //update total discount
+
+
+            $products[] = $cartItem->getInstance();
+        }
+
+        return $products;
+    }
+
+    private function getDiscountFromService()
+    {
+        return 0;
     }
 }

@@ -14,14 +14,16 @@ class CartItem
     /**
      * @return array
      */
-    public function getInstance(): array
+    public function getInstance()
     {
-        $cart['id'] = $this->getId();
-        $cart['quantity'] = $this->getQuantity();
-        $cart['unit_amount'] = $this->getUnitAmountInCents();
-        $cart['total_amount'] = $this->getTotalAmountInCents();
-        $cart['discount'] = $this->getDiscountInCents();
-        $cart['is_gift'] = $this->getIsGift();
+        $cart = new \stdClass();
+        $cart->id = $this->getId();
+        $cart->quantity = $this->getQuantity();
+        $cart->unit_amount = $this->getUnitAmountInCents();
+        $cart->total_amount = $this->getUnitAmountInCents();
+        $cart->discount = $this->getTotalAmountInCents();
+        $cart->discount = $this->getDiscountInCents();
+        $cart->is_gift = $this->getIsGift();
 
         return $cart;
     }

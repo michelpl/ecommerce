@@ -7,57 +7,7 @@ class Cart
     private int $totalAmountInCents = 0;
     private int $totalAmountWithDiscountInCents = 0;
     private int $totalDiscountInCents = 0;
-    private array $products = [];
-
-    public function mock()
-    {
-        $item1 = new CartItem();
-        $item2 = new CartItem();
-        $item3 = new CartItem();
-        $item4 = new CartItem();
-
-        $item1
-            ->setId(5)
-            ->setQuantity(3)
-            ->setUnitAmountInCents(100)
-            ->setTotalAmountInCents(100)
-            ->setIsGift(false)
-            ->setDiscountInCents(0);
-        $item2
-            ->setId(871)
-            ->setQuantity(11)
-            ->setUnitAmountInCents(100)
-            ->setTotalAmountInCents(100)
-            ->setIsGift(false)
-            ->setDiscountInCents(0);
-
-
-        $item3
-            ->setId(196)
-            ->setQuantity(200)
-            ->setUnitAmountInCents(100)
-            ->setTotalAmountInCents(100)
-            ->setIsGift(false)
-            ->setDiscountInCents(0);
-
-        $item4
-            ->setId(555)
-            ->setQuantity(19)
-            ->setUnitAmountInCents(100)
-            ->setTotalAmountInCents(100)
-            ->setIsGift(false)
-            ->setDiscountInCents(0);
-
-        $array = [
-            $item1->getInstance(),
-            $item2->getInstance(),
-            $item3->getInstance(),
-            $item4->getInstance()
-        ];
-
-
-        $this->setProducts($array);
-    }
+    private array $cartItems = [];
 
     /**
      * @return array
@@ -67,7 +17,7 @@ class Cart
         $cart['total_amount'] = $this->getTotalAmountInCents();
         $cart['total_amount_with_discount'] = $this->getTotalAmountWithDiscountInCents();
         $cart['total_discount'] = $this->getTotalDiscountInCents();
-        $cart['products'] = $this->getProducts();
+        $cart['products'] = $this->getCartItems();
 
         return $cart;
     }
@@ -129,18 +79,36 @@ class Cart
     /**
      * @return array
      */
-    public function getProducts(): array
+    public function getCartItems(): array
     {
-        return $this->products;
+        return $this->cartItems;
     }
 
     /**
-     * @param array $products
+     * @param array $cartItems
      * @return Cart
      */
-    public function setProducts(array $products): Cart
+    public function setCartItems(array $cartItems): Cart
     {
-        $this->products = $products;
+        $this->cartItems = $cartItems;
         return $this;
+    }
+
+    /**
+     * @param int $productId
+     * @return false|CartItem
+     */
+    public function getCartItem(int $productId)
+    {
+        $cartItems = $this->getCartItems();
+        $indexes = array_column($cartItems,'id');
+
+        $index = array_search($productId, $indexes);
+
+        if (isset($cartItems[(int)$index])) {
+            return $cartItems[(int)$index];
+        }
+
+        return false;
     }
 }

@@ -2,8 +2,9 @@
 
 namespace App\Http\Factories\Interfaces;
 
+use App\Http\Entities\CartItem;
+
 interface IFactory
 {
-    public function createFromObject(object $item): array;
-    public function createFromArray(array $item): array;
+    public function create(array $item);
 }

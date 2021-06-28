@@ -3,26 +3,33 @@
 namespace App\Http\Services;
 
 use App\Http\Entities\Cart;
-use App\Http\Entities\CartItem;
 use App\Http\Factories\CartItemFactory;
 use App\Http\Helpers\LoadFileHelper;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
+use GuzzleHttp\Client;
 
-class CartService
+final class CartService
 {
     private Cart $cart;
     private CartItemFactory $cartItemFactory;
     private array $productListFromStorage;
+    private Client $guzzleClient;
 
-    public function __construct(Cart $cart, CartItemFactory $cartItemFactory)
+    public function __construct(
+        Cart $cart,
+        CartItemFactory $cartItemFactory,
+        Client $guzzleClient,
+        DiscountService $discountService
+    )
     {
         $this->cart = $cart;
         $this->cartItemFactory = $cartItemFactory;
         $this->productListFromStorage = $this->loadProductListFromFile();
+        $this->guzzleClient = $guzzleClient;
+        $this->discountService = $discountService;
     }
 
     private function loadProductListFromFile() : array
@@ -138,7 +145,7 @@ class CartService
             $cartItem->setUnitAmountInCents($product->amount);
 
             $cartItem->setDiscountInCents(
-                $this->getDiscountFromService(
+                $this->getDiscountValue(
                     $cartItem->getId(),
                     $cartItem->getTotalAmountInCents()
                 )
@@ -198,20 +205,10 @@ class CartService
         return $promotionDate == date("Y-m-d");
     }
 
-    private function getDiscountFromService($id, $totalAmount): int
+    private function getDiscountValue(int $id, int $amount): int
     {
-        try {
-            /**
-             * @implements DISCOUNT SERVICE
-             */
-            $discountPercentage = rand(0, 10);
+        $discount = $this->discountService->getDiscountFromService($id, $amount);
 
-            return ($totalAmount * $discountPercentage) / 100;
-
-
-        } catch (Exception $e) {
-            Log::critical("Discount service not available | " . $e->getMessage());
-            return 0;
-        }
+        return round($amount * $discount);
     }
 }

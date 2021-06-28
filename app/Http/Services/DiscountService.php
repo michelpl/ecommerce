@@ -9,33 +9,34 @@ use Exception;
 
 final class DiscountService
 {
-    private Client $guzzleClient;
+    private Client $httpClient;
 
-    public function __construct(Client $guzzleClient)
+    public function __construct(Client $httpClient)
     {
-        $this->guzzleClient = $guzzleClient;
+        $this->httpClient = $httpClient;
     }
 
-    public function getDiscountFromService(int $productId): int
+    public function getDiscountFromService(int $productId): float
     {
         try {
             $discountServerUrl = Env::get('DISCOUNT_SERVER_URL');
-            $client = $this->guzzleClient->request('GET',
+            $client = $this->httpClient->request('GET',
                 $discountServerUrl . '?id=' . $productId
             );
 
             if ($client->getStatusCode() != 200) {
                 throw new Exception(
-                    "Discount service not available",
+                    "Discount service unavailable",
                     $client->getStatusCode()
                 );
             }
 
-                $response = $client->getBody();
+            $response = $client->getBody();
+
             return number_format(json_decode($response), 2);
 
         } catch (Exception $e) {
-            Log::critical("Discount service not available | " . $e->getMessage());
+            Log::critical("Discount service unavailable | " . $e->getMessage());
             return 0;
         }
     }

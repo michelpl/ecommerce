@@ -8,38 +8,39 @@ use App\Http\Helpers\LoadFileHelper;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Log;
-use GuzzleHttp\Client;
 
 final class CartService
 {
     private Cart $cart;
     private CartItemFactory $cartItemFactory;
     private array $productListFromStorage;
-    private Client $guzzleClient;
+    private DiscountService $discountService;
 
     public function __construct(
         Cart $cart,
         CartItemFactory $cartItemFactory,
-        Client $guzzleClient,
         DiscountService $discountService
     )
     {
         $this->cart = $cart;
         $this->cartItemFactory = $cartItemFactory;
         $this->productListFromStorage = $this->loadProductListFromFile();
-        $this->guzzleClient = $guzzleClient;
         $this->discountService = $discountService;
     }
 
+    /**
+     * @return array
+     */
     private function loadProductListFromFile() : array
     {
         $fileName = Env::get("PRODUCT_LIST_JSON");
-        $products = $this->productFactory(LoadFileHelper::getJsonFile($fileName));
-
-        return $products;
+        return $this->productFactory(LoadFileHelper::getJsonFile($fileName));
     }
 
+    /**
+     * @param $productList
+     * @return array
+     */
     private function productFactory($productList): array
     {
         $newProductList = [];
@@ -51,8 +52,12 @@ final class CartService
         return $newProductList;
     }
 
-
-    public function cartUpdate(Request $request)
+    /**
+     * @param Request $request
+     * @return array
+     * @throws Exception
+     */
+    public function cartUpdate(Request $request): array
     {
         try {
             $this->buildProductListFromRequest($request);
@@ -68,6 +73,9 @@ final class CartService
         }
     }
 
+    /**
+     * @return array
+     */
     public function getCart(): array
     {
         return $this->cart->getInstance();
@@ -75,8 +83,9 @@ final class CartService
 
     /**
      * @param Request $request
+     * @throws Exception
      */
-    private function buildProductListFromRequest(Request $request)
+    private function buildProductListFromRequest(Request $request): void
     {
         if (!isset($request->products)) {
             throw new Exception(
@@ -84,9 +93,13 @@ final class CartService
                 400
             );
         }
-        return $this->formatProductList($request);
+        $this->formatProductList($request);
     }
 
+    /**
+     * @param array $requestedProducts
+     * @throws Exception
+     */
     private function checkIfAllRequestedProductsExists(array $requestedProducts)
     {
         $requestedIds = array_column($this->productListFromStorage,'id');
@@ -103,6 +116,9 @@ final class CartService
         }
     }
 
+    /**
+     * @return int|string
+     */
     private function findGiftProductId()
     {
         $isGiftFields = array_column($this->productListFromStorage,'is_gift');
@@ -112,10 +128,9 @@ final class CartService
 
     /**
      * @param Request $request
-     * @return array
      * @throws Exception
      */
-    private function formatProductList(Request $request)
+    private function formatProductList(Request $request): void
     {
         $products = [];
 
@@ -160,6 +175,10 @@ final class CartService
         $this->cart->setCartItems($products);
     }
 
+    /**
+     * @param int $unitAmount
+     * @param int $unitDiscount
+     */
     private function updateCartTotals(int $unitAmount, int $unitDiscount): void
     {
         $this->cart->setTotalAmountInCents(
@@ -178,7 +197,10 @@ final class CartService
         );
     }
 
-    private function addGift()
+    /**
+     * @throws Exception
+     */
+    private function addGift(): void
     {
         $id = $this->findGiftProductId();
         $gift = (array) ($this->productListFromStorage[$id]);
@@ -199,15 +221,23 @@ final class CartService
         );
     }
 
+    /**
+     * @return bool
+     */
     private function shouldApplyGift():bool
     {
         $promotionDate = Env::get("BLACK_FRIDAY_DATE");
         return $promotionDate == date("Y-m-d");
     }
 
+    /**
+     * @param int $id
+     * @param int $amount
+     * @return int
+     */
     private function getDiscountValue(int $id, int $amount): int
     {
-        $discount = $this->discountService->getDiscountFromService($id, $amount);
+        $discount = $this->discountService->getDiscountFromService($id);
 
         return round($amount * $discount);
     }

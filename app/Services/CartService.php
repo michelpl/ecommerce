@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services;
 
 use App\Entities\Cart;
 use App\Entities\CartItem;
 use App\Factories\CartItemFactory;
-use App\Http\Helpers\LoadFileHelper;
+use App\Helpers\LoadFileHelper;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;

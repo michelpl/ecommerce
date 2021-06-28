@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Interfaces\ICheckout;
-use App\Http\Services\CartService;
+use App\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class CheckoutController extends Controller implements ICheckout
 {
@@ -25,7 +24,7 @@ class CheckoutController extends Controller implements ICheckout
     /**
      * Add products to cart
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function addProductsToCart(Request $request): JsonResponse
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Helpers;
+namespace App\Helpers;
 
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Env;

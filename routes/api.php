@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CheckoutController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'v1'], function () {
     Route::get('/', function(){
-        return  ["message" => "ok"];;
+        return  ["message" => "ok"];
     });
+
+    Route::post('checkout', [CheckoutController::class, 'addProductsToCart']);
 });

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Factories\Interfaces;
+namespace App\Factories\Interfaces;
 
-use App\Http\Entities\CartItem;
+use App\Entities\CartItem;
 
 interface IFactory
 {

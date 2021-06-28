@@ -2,9 +2,9 @@
 
 namespace App\Http\Services;
 
-use App\Http\Entities\Cart;
-use App\Http\Entities\CartItem;
-use App\Http\Factories\CartItemFactory;
+use App\Entities\Cart;
+use App\Entities\CartItem;
+use App\Factories\CartItemFactory;
 use App\Http\Helpers\LoadFileHelper;
 use Exception;
 use Illuminate\Http\Request;

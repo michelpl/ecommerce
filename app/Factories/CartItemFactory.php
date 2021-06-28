@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Factories;
+namespace App\Factories;
 
-use App\Http\Entities\CartItem;
-use App\Http\Factories\Interfaces\IFactory;
+use App\Entities\CartItem;
+use App\Factories\Interfaces\IFactory;
 
 class CartItemFactory implements IFactory
 {
@@ -14,7 +14,7 @@ class CartItemFactory implements IFactory
         $this->cartItem = $cartItem;
     }
 
-    public function create(array $item)
+    public function create(array $item): CartItem
     {
         try {
             $this->cartItem

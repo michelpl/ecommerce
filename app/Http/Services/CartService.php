@@ -3,6 +3,7 @@
 namespace App\Http\Services;
 
 use App\Http\Entities\Cart;
+use App\Http\Entities\CartItem;
 use App\Http\Factories\CartItemFactory;
 use App\Http\Helpers\LoadFileHelper;
 use Exception;
@@ -34,33 +35,23 @@ final class CartService
     private function loadProductListFromFile() : array
     {
         $fileName = Env::get("PRODUCT_LIST_JSON");
-        return $this->productFactory(LoadFileHelper::getJsonFile($fileName));
-    }
-
-    /**
-     * @param $productList
-     * @return array
-     */
-    private function productFactory($productList): array
-    {
-        $newProductList = [];
-        foreach ($productList as $product)
-        {
-            $newProductList[$product->id] = $product;
-        }
-
-        return $newProductList;
+        return LoadFileHelper::getJsonFile($fileName);
     }
 
     /**
      * @param Request $request
-     * @return array
      * @throws Exception
      */
     public function cartUpdate(Request $request): void
     {
         try {
-            $this->buildProductListFromRequest($request);
+            if (!isset($request->products)) {
+                throw new Exception(
+                    "The products field is missing",
+                    400
+                );
+            }
+            $this->updateCartItems($request);
 
             if ($this->shouldApplyGift()) {
                 $this->addGift();
@@ -71,26 +62,11 @@ final class CartService
     }
 
     /**
-     * @return array
+     * @return object
      */
     public function getCart(): object
     {
         return $this->cart->getInstance();
-    }
-
-    /**
-     * @param Request $request
-     * @throws Exception
-     */
-    private function buildProductListFromRequest(Request $request): void
-    {
-        if (!isset($request->products)) {
-            throw new Exception(
-                "The products field is missing",
-                400
-            );
-        }
-        $this->formatProductList($request);
     }
 
     /**
@@ -127,7 +103,7 @@ final class CartService
      * @param Request $request
      * @throws Exception
      */
-    private function formatProductList(Request $request): void
+    private function updateCartItems(Request $request): void
     {
         $products = [];
 
@@ -152,15 +128,10 @@ final class CartService
                 );
             }
 
-            $cartItem->setQuantity($requestedProduct['quantity']);
-            $cartItem->setIsGift($product->is_gift);
-            $cartItem->setUnitAmountInCents($product->amount);
-
-            $cartItem->setDiscountInCents(
-                $this->getDiscountValue(
-                    $cartItem->getId(),
-                    $cartItem->getTotalAmountInCents()
-                )
+            $this->setCartItemProperties(
+                $cartItem,
+                $requestedProduct['quantity'],
+                $product
             );
             $this->updateCartTotals(
                 $cartItem->getTotalAmountInCents(),
@@ -170,6 +141,30 @@ final class CartService
             $products[] = $cartItem->getInstance();
         }
         $this->cart->setCartItems($products);
+    }
+
+    /**
+     * @param CartItem $cartItem
+     * @param int $quantity
+     * @param object $product
+     * @throws Exception
+     */
+    private function setCartItemProperties(
+        CartItem $cartItem,
+        int $quantity,
+        object $product
+    ): void
+    {
+        $cartItem->setQuantity($quantity);
+        $cartItem->setIsGift($product->is_gift);
+        $cartItem->setUnitAmountInCents($product->amount);
+
+        $cartItem->setDiscountInCents(
+            $this->getDiscountValue(
+                $cartItem->getId(),
+                $cartItem->getTotalAmountInCents()
+            )
+        );
     }
 
     /**

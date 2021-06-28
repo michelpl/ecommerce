@@ -25,15 +25,31 @@ class LoadFileHelper
         return self::$file;
     }
 
-    private static function loadFile(string $fileName)
+    private static function loadFile(string $fileName): array
     {
         try {
             $fileContent = Storage::disk('local')->get($fileName);
 
-            return json_decode($fileContent);
+            return self::formatProductList(json_decode($fileContent));
 
         } catch (FileNotFoundException $e) {
             Log::critical($e->getMessage());
         }
     }
+
+    /**
+     * @param $productList
+     * @return array
+     */
+    private static function formatProductList($productList): array
+    {
+        $newProductList = [];
+        foreach ($productList as $product)
+        {
+            $newProductList[$product->id] = $product;
+        }
+
+        return $newProductList;
+    }
+
 }

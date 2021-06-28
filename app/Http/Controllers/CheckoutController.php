@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Interfaces\ICheckout;
 use App\Http\Services\CartService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -26,10 +27,10 @@ class CheckoutController extends Controller implements ICheckout
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
-    public function addProductsToCart(Request $request)
+    public function addProductsToCart(Request $request): JsonResponse
     {
         try {
-            return $this->cartService->cartUpdate($request);
+            $this->cartService->cartUpdate($request);
 
             return response()->json($this->cartService->getCart(), 201);
 

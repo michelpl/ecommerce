@@ -57,7 +57,7 @@ final class CartService
      * @return array
      * @throws Exception
      */
-    public function cartUpdate(Request $request): array
+    public function cartUpdate(Request $request): void
     {
         try {
             $this->buildProductListFromRequest($request);
@@ -65,9 +65,6 @@ final class CartService
             if ($this->shouldApplyGift()) {
                 $this->addGift();
             }
-
-            return $this->getCart();
-
         } catch (Exception $e) {
             throw new Exception($e->getMessage(), $e->getCode());
         }
@@ -76,7 +73,7 @@ final class CartService
     /**
      * @return array
      */
-    public function getCart(): array
+    public function getCart(): object
     {
         return $this->cart->getInstance();
     }

@@ -10,14 +10,15 @@ class Cart
     private array $cartItems = [];
 
     /**
-     * @return array
+     * @return object
      */
-    public function getInstance(): array
+    public function getInstance(): object
     {
-        $cart['total_amount'] = $this->getTotalAmountInCents();
-        $cart['total_amount_with_discount'] = $this->getTotalAmountWithDiscountInCents();
-        $cart['total_discount'] = $this->getTotalDiscountInCents();
-        $cart['products'] = $this->getCartItems();
+        $cart = new \stdClass();
+        $cart->total_amount = $this->getTotalAmountInCents();
+        $cart->total_amount_with_discount = $this->getTotalAmountWithDiscountInCents();
+        $cart->total_discount = $this->getTotalDiscountInCents();
+        $cart->products = $this->getCartItems();
 
         return $cart;
     }

@@ -20,7 +20,6 @@ This is an E-commerce cart api that receives requests for cart updates
 
 ## Building the environment
 
-
 #### Clone this repository
 
 ```bash
@@ -47,6 +46,8 @@ docker-compose up -d --build
 
 After the building process, the main api wil be available on `http://localhost:8080
 
+![usage](https://imgur.com/NDq1w0x.gif)
+
 ## Usage
 
 Send a `[POST]` request for the `checkout` endpoint using the a list of products as payload in the request's body as on the following example
@@ -72,6 +73,8 @@ curl --location --request POST 'http://localhost:8080/api/v1/checkout' \
     ]
 }'
 ```
+
+![usage](https://imgur.com/yYIgaHX.gif)
 
 ### Postman collection
 

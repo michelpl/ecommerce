@@ -24,6 +24,10 @@ Description here
 + Ecommerce Api Description
 + gRPC
 
+## Requirements
+
+- Docker `20.10.5+`
+- Docker compose `1.29.2+`
 
 `Ecommerce-api` is the only tool that checks all of those boxes.
 

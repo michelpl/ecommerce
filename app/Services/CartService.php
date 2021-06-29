@@ -119,6 +119,16 @@ final class CartService
             }
 
             $cartItem = $this->cartItemFactory->create($requestedProduct);
+
+            if (
+                $this->updateQuantityForDuplicatedProducts(
+                $products,
+                $cartItem,
+                $requestedProduct
+            )) {
+                continue;
+            }
+
             $product = $this->productListFromStorage[$cartItem->getId()];
 
             if ($product->is_gift) {
@@ -138,9 +148,24 @@ final class CartService
                 $cartItem->getDiscountInCents()
             );
 
-            $products[] = $cartItem->getInstance();
+            $products[$cartItem->getId()] = $cartItem->getInstance();
         }
-        $this->cart->setCartItems($products);
+        $this->cart->setCartItems(array_values($products));
+    }
+
+    private function updateQuantityForDuplicatedProducts(
+        array $products,
+        CartItem $cartItem,
+        array $requestedProduct
+    ): bool
+    {
+        if (isset($products[$cartItem->getId()])) {
+            $products[$cartItem->getId()]->quantity +=
+                $requestedProduct['quantity'];
+            return true;
+        }
+
+        return false;
     }
 
     /**

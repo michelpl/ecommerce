@@ -58,7 +58,7 @@ class CartItem
      */
     public function setQuantity(int $quantity): CartItem
     {
-        if ($quantity < 0) {
+        if ($quantity < 1) {
             throw new \Exception(
                 "Quantity must be greater than 0",
                 400

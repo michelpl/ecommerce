@@ -76,6 +76,10 @@ curl --location --request POST 'http://localhost:8080/api/v1/checkout' \
 
 ![usage](https://imgur.com/yYIgaHX.gif)
 
+### Environment variables
+
+You can set the environment variables by changing the `docker-compose` file in the devops folder 
+
 ### Postman collection
 
 You can run the project collection in your [Postman]("https://www.postman.com/") app

@@ -9,11 +9,6 @@ use Illuminate\Http\Request;
 
 class CheckoutController extends Controller implements ICheckout
 {
-    private array $validationRules = [
-        'id' => 'required|integer',
-        'quantity' => 'required|integer'
-    ];
-
     private CartService $cartService;
 
     public function __construct(CartService $cartService)

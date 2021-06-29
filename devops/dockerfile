@@ -1,0 +1,51 @@
+FROM php:7.4-apache
+
+WORKDIR /var/www/html
+
+RUN apt -yqq update
+
+## Libraries
+RUN apt -yqq install libxml2-dev
+RUN apt -yqq install zlib1g-dev
+RUN apt -yqq install libpng-dev
+RUN apt -yqq install libzip-dev
+RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libldap2-dev
+
+## Dependencies
+RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install mysqli
+RUN docker-php-ext-install xml
+RUN docker-php-ext-install zip
+
+## GIT
+RUN apt-get install git -y
+
+## Others
+RUN apt-get install vim -y
+RUN a2enmod rewrite
+
+RUN git clone https://github.com/michelpl/ecommerce-api.git .
+
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+##COMPOSER INSTALLATION
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+RUN php composer-setup.php
+RUN php -r "unlink('composer-setup.php');"
+
+RUN cp /var/www/html/.env.example /var/www/html/.env
+
+## Permissions
+RUN find /var/www/html/ -type d -exec chmod 775 {} \;
+RUN find /var/www/html/ -type f -exec chmod 664 {} \;
+RUN chown -R www-data:root /var/www/html/
+
+RUN php composer.phar update -vvv
+
+COPY ./products.json /var/www/html/storage/app
+
+RUN php artisan key:generate

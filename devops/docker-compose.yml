@@ -1,0 +1,36 @@
+version: '3.2'
+
+services:
+  discount:
+    image: hashorg/hash-mock-discount-service
+    restart: always
+    container_name: discount
+    ports:
+      - "50051:50051"
+    networks:
+      - app-network
+  api:
+    container_name: api
+    environment:
+      - BLACK_FRIDAY_DATE=2021-06-29
+      - DISCOUNT_SERVER_URL=http://grpcclient:2121
+      - PRODUCT_LIST_JSON=products.json
+    build: ./
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+  grpcclient:
+    container_name: grpcclient
+    depends_on:
+      - api
+    build: ./grpc-client/
+    ports:
+      - "2121:2121"
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge

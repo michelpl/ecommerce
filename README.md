@@ -1,60 +1,86 @@
-# Ecommerce Api
+# Ecommerce Cart Api
 
-[![Downloads](http://pepy.tech/badge/shallow-backup)](http://pepy.tech/count/shallow-backup)
-[![Build Status](https://travis-ci.com/alichtman/shallow-backup.svg?branch=master)](https://travis-ci.com/alichtman/shallow-backup)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1719da4d7df5455d8dbb4340c428f851)](https://www.codacy.com/app/alichtman/shallow-backup?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=alichtman/shallow-backup&amp;utm_campaign=Badge_Grade)
-<!-- [![Coverage Status](https://coveralls.io/repos/github/alichtman/shallow-backup/badge.svg?branch=master)](https://coveralls.io/github/alichtman/shallow-backup?branch=master) -->
-
-
-Contents
-========
-
-* [Description](#Description)
-* [gRPC](#gRPC)
-* [Installation](#Installation)
-* [Running the project](#Running the project)
-* [Usage](#Usage)
-* [Postman collection](#Postman collection)
-
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/1954140-559ca720-0fdb-40f2-8a00-dba85e42b67e?action=collection%2Ffork&collection-url=entityId%3D1954140-559ca720-0fdb-40f2-8a00-dba85e42b67e%26entityType%3Dcollection%26workspaceId%3D884cf7ff-ca99-4231-944e-d47ac4babda5)
 
 ## Description
 
-Description here
+This is an E-commerce cart api that receives requests for cart updates
 
-+ Ecommerce Api Description
-+ gRPC
+## Requirements
 
+- Docker `20.10.5+`
+- Docker compose `1.29.2+`
 
-`Ecommerce-api` is the only tool that checks all of those boxes.
+### Make sure the following ports are avaliable in your server
 
-Installation
----
-
-**Do not install this as `root`.**
-
-1. Install with [`#`](https://#/)
-    + `$ docker`
+* Port `8080` for api
+* Port `2121` for grpc client
+* Port `50051` for grpc server
 
 
-Usage
----
+## Building the environment
 
-To start the interactive program, simply run `$ #`.
 
-`Ecommerce Api` was built with scripting in mind. Every feature that's supported in the interactive program is supported with command line arguments.
+#### Clone this repository
 
-```shell
-Usage: Ecommerce-api
-
+```bash
+git clone https://github.com/michelpl/ecommerce-api
 ```
 
+#### Clone this repository
+
+```bash
+git clone https://github.com/michelpl/ecommerce-api
+```
+
+#### Enter the project's devops folder
+
+```bash
+cd ecommerce-api/devops
+```
+
+#### Build
+
+```bash
+docker-compose up -d --build
+```
+
+After the building process, the main api wil be available on `http://localhost:8080
+
+## Usage
+
+Send a `[POST]` request for the `checkout` endpoint using the a list of products as payload in the request's body as on the following example
+
+```shell
+curl --location --request POST 'http://localhost:8080/api/v1/checkout' \
+--header 'Accept: application/json' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "products": [
+        {
+            "id": 3,
+            "quantity": 1
+        },
+        {
+            "id": 5,
+            "quantity": 1
+        },
+        {
+            "id": 2,
+            "quantity": 3
+        }
+    ]
+}'
+```
+
+### Postman collection
+
+You can run the project collection in your [Postman]("https://www.postman.com/") app
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/1954140-559ca720-0fdb-40f2-8a00-dba85e42b67e?action=collection%2Ffork&collection-url=entityId%3D1954140-559ca720-0fdb-40f2-8a00-dba85e42b67e%26entityType%3Dcollection%26workspaceId%3D884cf7ff-ca99-4231-944e-d47ac4babda5)
+
+or
+
+[Donwload](https://www.getpostman.com/collections/a391fac6619543eae84f) the collection's json
 
 
-Features
----
-
-By default, `Ecommerce Api`
-
-1. Feature list
-    * `###`
-    

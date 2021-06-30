@@ -28,12 +28,6 @@ You can find the gRpc client on this [repository]("https://github.com/michelpl/e
 git clone https://github.com/michelpl/ecommerce-api
 ```
 
-#### Clone this repository
-
-```bash
-git clone https://github.com/michelpl/ecommerce-api
-```
-
 #### Enter the project's devops folder
 
 ```bash

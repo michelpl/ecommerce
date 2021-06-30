@@ -4,7 +4,9 @@
 
 ## Description
 
-This is an E-commerce cart api that receives requests for cart updates
+This is an E-commerce cart api that receives requests for cart updates.
+
+You can find the gRpc client on this [repository]("https://github.com/michelpl/ecommerce-discount-client")
 
 ## Requirements
 
@@ -89,5 +91,11 @@ You can run the project collection in your [Postman]("https://www.postman.com/")
 or
 
 [Donwload](https://www.getpostman.com/collections/a391fac6619543eae84f) the collection's json
+
+## Running tests
+
+```bash
+docker exec -it api php artisan test --env=testing
+```
 
 

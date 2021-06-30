@@ -110,7 +110,6 @@ final class CartService
         $this->checkIfAllRequestedProductsExists($request->products);
 
         foreach ($request->products as $requestedProduct) {
-
             if (!isset($requestedProduct['id'])) {
                 throw new Exception(
                     "The products:id field is missing",
@@ -120,13 +119,11 @@ final class CartService
 
             $cartItem = $this->cartItemFactory->create($requestedProduct);
 
-            if (
-                $this->updateQuantityForDuplicatedProducts(
-                $products,
-                $cartItem,
-                $requestedProduct
-            )) {
-                continue;
+            if (isset($products[$cartItem->getId()])) {
+                throw new Exception(
+                    "The product id " . $cartItem->getId() . " is duplicated",
+                    400
+                );
             }
 
             $product = $this->productListFromStorage[$cartItem->getId()];
@@ -151,21 +148,6 @@ final class CartService
             $products[$cartItem->getId()] = $cartItem->getInstance();
         }
         $this->cart->setCartItems(array_values($products));
-    }
-
-    private function updateQuantityForDuplicatedProducts(
-        array $products,
-        CartItem $cartItem,
-        array $requestedProduct
-    ): bool
-    {
-        if (isset($products[$cartItem->getId()])) {
-            $products[$cartItem->getId()]->quantity +=
-                $requestedProduct['quantity'];
-            return true;
-        }
-
-        return false;
     }
 
     /**
